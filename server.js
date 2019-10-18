@@ -3,6 +3,8 @@ let mongodb = require('mongodb')
 let app = express()
 let db
 
+app.use(express.static('public'))
+
 let connectionString = 'mongodb+srv://todoAppUser:todo223@cluster0-h7ajm.mongodb.net/TodoApp?retryWrites=true&w=majority'
 mongodb.connect(connectionString, {
     useNewUrlParser: true,
@@ -12,6 +14,7 @@ mongodb.connect(connectionString, {
     app.listen(3000)
 })
 
+app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
 app.get('/', function (req, res) {
@@ -26,7 +29,7 @@ app.get('/', function (req, res) {
     </head>
     <body>
     <div class="container">
-        <h1 class="display-4 text-center py-1">To-Do App!!</h1>
+        <h1 class="display-4 text-center py-1">To-Do App</h1>
         
         <div class="jumbotron p-3 shadow-sm">
         <form action="/create-item" method="POST">
@@ -42,7 +45,7 @@ app.get('/', function (req, res) {
             return ` <li class="list-group-item list-group-item-action d-flex align-items-center justify-content-between">
             <span class="item-text">${item.text}</span>
             <div>
-            <button class="edit-me btn btn-secondary btn-sm mr-1">Edit</button>
+            <button data-id="${item._id}"   class="edit-me btn btn-secondary btn-sm mr-1">Edit</button>
             <button class="delete-me btn btn-danger btn-sm">Delete</button>
             </div>
         </li>`
@@ -50,14 +53,22 @@ app.get('/', function (req, res) {
         </ul>
         
     </div>
-    
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="/browser.js"></script>
     </body>
     </html>`)
     })
 })
 
-app.post('/create-item', function (req, res) {
+app.post('/create-item', function (req, res) { 
     db.collection('items').insertOne({ text: req.body.item }, function () {
         res.redirect('/')
+    })
+})
+
+
+app.post('/update-item', function (req, res) {
+    db.collection('items').findOneAndUpdate({ _id: new mongodb.ObjectID(req.body.id) }, { $set: { text: req.body.text } }, function () {
+        res.send("Success")
     })
 })
